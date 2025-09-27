@@ -1,60 +1,33 @@
-'use client'
+import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { fetchNotes } from '@/lib/api';
+import NotesClient from './Notes.client';
+import css from '../page.module.css';
 
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import NoteList from '../../components/NoteList/NoteList'
-import css from '../page.module.css'
-import { fetchNotes, type NoteResponse } from '../../lib/api'
-import {useState } from 'react'
-import Modal from '../../components/Modal/Modal'
-import SearchBox from '../../components/SearchBox/SearchBox'
-import { useDebouncedCallback } from 'use-debounce';
-import Pagination from '../../components/Pagination/Pagination'
-import NoteForm from '../../components/NoteForm/NoteForm'
-import NoteClient from './Notes.client'
+type PageProps = {
+  searchParams?: { page?: string; searchValue?: string };
+};
+
+export default async function Notes({ searchParams }: PageProps) {
+  const sp = await searchParams;
+  const page = Number(sp?.page ?? 1);
+  const searchValue = sp?.searchValue ?? '';
 
 
-const Notes = () => {
-    const [page, setPage] = useState(1);
-    const [isModalOpen, setIsModalOpen] = useState(false)
-    const [searchValue, setSearchValue] = useState("")
-    
+  const queryClient = new QueryClient();
 
-    const { data } = useQuery<NoteResponse>({
-        queryKey: ["task", page, searchValue],
-        queryFn: () => fetchNotes(page, searchValue),
-        placeholderData: keepPreviousData
-        
-    });
-    const totalPages = data?.totalPages ?? 0;
-    
-    const handleClick = () => {
-        setIsModalOpen(true)
-    }
+  await queryClient.prefetchQuery({
+    queryKey: ['task', page, searchValue],
+    queryFn: () => fetchNotes(page, searchValue),
+  });
 
-    const handleCLose = () => {
-        setIsModalOpen(false)
-    }
-
-    const handleChange = useDebouncedCallback((val: string) => {
-        setSearchValue(val)
-        setPage(1);
-    }, 1000)
-
-        return (<div className={css.app}>
-            <header className={css.toolbar}>
-                <SearchBox searchValue={searchValue} onChange={handleChange} />
-                {totalPages > 1 && <Pagination onChange={setPage} totalPages={totalPages} currentPage={page} />}
-                <button className={css.button} onClick={handleClick}>Create note +</button>
-                {isModalOpen && (
-                    <Modal onRequestClose={handleCLose}>
-                        <NoteForm onClose={handleCLose} />
-                    </Modal>
-                )}
-            </header>
-            <NoteList notes={data?.notes ?? []} />
-            <NoteClient />
-        </div>
-        )
-    
+  
+  return (
+    <div className={css.app}>
+      <header className={css.toolbar}>
+        <HydrationBoundary state={dehydrate(queryClient)}>
+          <NotesClient initialPage={page} initialSearchValue={searchValue} />
+        </HydrationBoundary>
+      </header>
+    </div>
+  );
 }
-export default Notes

@@ -1,7 +1,7 @@
 import axios from "axios"
 import type { CreateNoteRequest, Note } from "../types/note"
 
-export { fetchNotes, createNote, deleteNote}
+export { fetchNotes, createNote, deleteNote, fetchNoteById}
 
 export type NoteResponse = {
     notes: Note[],
@@ -37,4 +37,13 @@ const deleteNote = async (noteId: string) => {
         }
     })
     return res.data.note
+}
+
+const fetchNoteById = async (id: string): Promise<Note> => {
+    const res = await axios.get<Note>(`https://notehub-public.goit.study/api/notes/${id}`, {
+        headers: {
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_NOTEHUB_TOKEN}`
+        }
+    })
+    return res.data
 }
