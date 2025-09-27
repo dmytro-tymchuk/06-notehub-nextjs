@@ -4,11 +4,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { useState } from "react"
 
-interface TanstackProviderProps{
+interface TanStackProviderProps{
     children: React.ReactNode
 }
 
-const TanstackProvider = ({children} : TanstackProviderProps ) => {
+const TanStackProvider = ({children} : TanStackProviderProps ) => {
     const [queryClient] = useState(new QueryClient())
     return (
         <QueryClientProvider client={queryClient}>
@@ -18,4 +18,4 @@ const TanstackProvider = ({children} : TanstackProviderProps ) => {
         )
 }
 
-export default TanstackProvider
+export default TanStackProvider
